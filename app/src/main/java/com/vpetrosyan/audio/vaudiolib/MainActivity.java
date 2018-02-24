@@ -6,6 +6,8 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.CheckBox;
+import android.widget.Checkable;
 import android.widget.TextView;
 
 import com.vpetrosyan.audio.file.AudioData;
@@ -31,17 +33,15 @@ public class MainActivity extends AppCompatActivity {
 
     private Handler mHandler = new Handler();
 
-    private boolean updateWaveView = true;
+    private CheckBox checkBox;
 
     private Runnable waveUpdater = new Runnable() {
         @Override
         public void run() {
-            if(updateWaveView) {
-                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-                    waveView.seekTo(mediaPlayer.getCurrentPosition());
-                }
-                mHandler.postDelayed(this, 24);
+            if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                waveView.seekTo(mediaPlayer.getCurrentPosition());
             }
+            mHandler.postDelayed(this, 24);
         }
     };
 
@@ -54,16 +54,18 @@ public class MainActivity extends AppCompatActivity {
         waveView = findViewById(R.id.wave);
         waveView.setVisibility(View.GONE);
 
+        checkBox = findViewById(R.id.checkbox);
+
         waveView.setListener(new VWaveView.SeekListener() {
             @Override
             public void onSeek(long time, boolean isFromUser) {
                 timeTextView.setText(formatter.formatTime(time));
 
-                if(isFromUser) {
-                    updateWaveView = false;
-                    pauseAudio();
+                if (isFromUser) {
+                    if(!checkBox.isChecked()) {
+                        pauseAudio();
+                    }
                     mediaPlayer.seekTo((int) time);
-                    updateWaveView = true;
                 }
             }
         });
@@ -72,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         mPlayBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(mediaPlayer == null) {
+                if (mediaPlayer == null) {
                     mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.test3);
                     mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                         @Override
@@ -88,9 +90,16 @@ public class MainActivity extends AppCompatActivity {
                             mediaPlayer.start();
                         }
                     });
+                    mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                        @Override
+                        public void onCompletion(MediaPlayer mediaPlayer) {
+                            mPlayBtn.setImageResource(android.R.drawable.ic_media_play);
+                            mediaPlayer.seekTo(0);
+                        }
+                    });
                 }
 
-                if(mediaPlayer!= null && mediaPlayer.isPlaying()) {
+                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                     pauseAudio();
                 } else {
                     runOnUiThread(waveUpdater);
