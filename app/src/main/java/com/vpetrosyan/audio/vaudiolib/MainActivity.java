@@ -117,11 +117,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void pauseAudio() {
         mPlayBtn.setImageResource(android.R.drawable.ic_media_play);
-        mediaPlayer.pause();
+
+        if(mediaPlayer != null) {
+            mediaPlayer.pause();
+        }
     }
 
     private void startAudio() {
         mPlayBtn.setImageResource(android.R.drawable.ic_media_pause);
-        mediaPlayer.start();
+
+        if(mediaPlayer != null) {
+            mediaPlayer.start();
+        }
     }
 }
