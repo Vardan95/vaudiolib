@@ -7,18 +7,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.Checkable;
 import android.widget.TextView;
 
-import com.vpetrosyan.audio.file.AudioData;
 import com.vpetrosyan.audio.file.AudioDataExtractor;
-import com.vpetrosyan.audio.file.PCMAudioExtractor;
 import com.vpetrosyan.audio.file.WAVAudioDataExtractor;
 import com.vpetrosyan.audio.formatter.AudioTimeFormatter;
 import com.vpetrosyan.audio.formatter.LongTimeFormatter;
 import com.vpetrosyan.audio.vwaveview.VWaveView;
-
-import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,7 +34,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-                waveView.seekTo(mediaPlayer.getCurrentPosition());
+                int time = mediaPlayer.getCurrentPosition();
+                waveView.seekTo(time);
+                timeTextView.setText(formatter.formatTime(time));
+
             }
             mHandler.postDelayed(this, 24);
         }
@@ -58,15 +56,17 @@ public class MainActivity extends AppCompatActivity {
 
         waveView.setListener(new VWaveView.SeekListener() {
             @Override
-            public void onSeek(long time, boolean isFromUser) {
-                timeTextView.setText(formatter.formatTime(time));
+            public void onSeek(long time) {
+                mediaPlayer.seekTo((int) time);
 
-                if (isFromUser) {
-                    if(!checkBox.isChecked()) {
-                        pauseAudio();
-                    }
-                    mediaPlayer.seekTo((int) time);
+                if(checkBox.isChecked()) {
+                    startAudio();
                 }
+            }
+
+            @Override
+            public void onSeekStarted() {
+                pauseAudio();
             }
         });
 
@@ -75,21 +75,19 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (mediaPlayer == null) {
+                    AudioDataExtractor extractor = new WAVAudioDataExtractor();
+                    waveView.setAudio(extractor.extractData(MainActivity.this, R.raw.test3));
+                    timeTextView.setText(formatter.formatTime(0));
+
                     mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.test3);
                     mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                         @Override
                         public void onPrepared(MediaPlayer mediaPlayer) {
-                            //AudioDataExtractor extractor = new PCMAudioExtractor();
-                            AudioDataExtractor extractor = new WAVAudioDataExtractor();
-                            //waveView.setAudio(extractor.extractData(MainActivity.this, R.raw.jinglebells));
-                            waveView.setAudio(extractor.extractData(MainActivity.this, R.raw.test3));
-                            timeTextView.setText(formatter.formatTime(0));
-
                             waveView.setVisibility(View.VISIBLE);
-
                             mediaPlayer.start();
                         }
                     });
+
                     mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                         @Override
                         public void onCompletion(MediaPlayer mediaPlayer) {
@@ -103,8 +101,7 @@ public class MainActivity extends AppCompatActivity {
                     pauseAudio();
                 } else {
                     runOnUiThread(waveUpdater);
-                    mPlayBtn.setImageResource(android.R.drawable.ic_media_pause);
-                    mediaPlayer.start();
+                    startAudio();
                 }
             }
         });
@@ -112,8 +109,19 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(waveUpdater);
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        pauseAudio();
+    }
+
     private void pauseAudio() {
         mPlayBtn.setImageResource(android.R.drawable.ic_media_play);
         mediaPlayer.pause();
+    }
+
+    private void startAudio() {
+        mPlayBtn.setImageResource(android.R.drawable.ic_media_pause);
+        mediaPlayer.start();
     }
 }

@@ -41,7 +41,9 @@ public class VWaveView extends FrameLayout implements
     private static final AudioTimeFormatter DEFAULT_FORMATTER = new ShortTimeFormatter();
 
     public interface SeekListener {
-        void onSeek(long time, boolean isFromUser);
+        void onSeekStarted();
+
+        void onSeek(long time);
     }
 
     private WaveImageProvider provider;
@@ -63,6 +65,8 @@ public class VWaveView extends FrameLayout implements
 
     private boolean isUserIntercepted = true;
 
+    private long mCurrentSeekTime;
+
     public VWaveView(Context context) {
         super(context);
         init();
@@ -79,7 +83,7 @@ public class VWaveView extends FrameLayout implements
     }
 
     public void seekTo(int timeInMillis) {
-        if(hasAudio) {
+        if (hasAudio) {
             int x = (int) ((timeInMillis / (float) provider.getCalculatedStepTime()) * provider.getCalculatedStepLength());
             isUserIntercepted = false;
             scrollView.smoothScrollTo(x, 0);
@@ -114,7 +118,6 @@ public class VWaveView extends FrameLayout implements
 
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(sliderLineWidth, -1);
         params.gravity = Gravity.CENTER_HORIZONTAL;
-//
         addView(sliderView, params);
 
         stepDesiredLength = SizeUtils.convertDpToPixels(DEFAULT_STEP_SIZE, getContext());
@@ -126,9 +129,9 @@ public class VWaveView extends FrameLayout implements
     public void setAudio(AudioData data) {
         hasAudio = true;
 
-        if(BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG) {
             Log.e(TAG, "Rate is " + data.sampleRate + ", channels are " + data.channels +
-                        ", length is " + data.audioLength);
+                    ", length is " + data.audioLength);
         }
 
         provider = createNativeProvider(data);
@@ -140,8 +143,8 @@ public class VWaveView extends FrameLayout implements
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        if(hasAudio) {
-            int width = getMeasuredWidth() - getPaddingRight()- getPaddingRight();
+        if (hasAudio) {
+            int width = getMeasuredWidth() - getPaddingRight() - getPaddingRight();
             provider.setSidePadding(width / 2);
 
             bitmap.recycle();
@@ -155,7 +158,7 @@ public class VWaveView extends FrameLayout implements
 
             imageView.setImageBitmap(bitmap);
 
-            if(BuildConfig.DEBUG) {
+            if (BuildConfig.DEBUG) {
                 Log.e(TAG, "Drawing took " + (System.currentTimeMillis() - start));
             }
 
@@ -164,24 +167,30 @@ public class VWaveView extends FrameLayout implements
 
     @Override
     public void onScrollUpdated(int x, int y) {
-        if(hasAudio) {
+        if (hasAudio) {
             if (x > waveImageWidth) {
                 x = waveImageWidth;
             }
 
-            if(x < 0) {
+            if (x < 0) {
                 x = 0;
             }
 
-            long time = (long) ((x / (float) provider.getCalculatedStepLength()) * provider.getCalculatedStepTime());
+            mCurrentSeekTime = (long) ((x / (float) provider.getCalculatedStepLength()) * provider.getCalculatedStepTime());
+        }
+    }
 
-            if(BuildConfig.DEBUG) {
-                Log.e(TAG, "Selected time is " + time);
-            }
+    @Override
+    public void onScrollStart() {
+        if (listener != null) {
+            listener.onSeekStarted();
+        }
+    }
 
-            if(listener != null) {
-                listener.onSeek(time, isUserIntercepted);
-            }
+    @Override
+    public void onScrollEnd() {
+        if (listener != null) {
+            listener.onSeek(mCurrentSeekTime);
         }
     }
 

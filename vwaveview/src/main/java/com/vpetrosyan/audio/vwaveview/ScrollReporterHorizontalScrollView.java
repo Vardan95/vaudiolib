@@ -1,6 +1,8 @@
 package com.vpetrosyan.audio.vwaveview;
 
 import android.content.Context;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.widget.HorizontalScrollView;
 
 /**
@@ -10,7 +12,9 @@ import android.widget.HorizontalScrollView;
 class ScrollReporterHorizontalScrollView extends HorizontalScrollView {
 
     interface ScrollUpdateListener {
+        void onScrollStart();
         void onScrollUpdated(int x, int y);
+        void onScrollEnd();
     }
 
     private ScrollUpdateListener listener;
@@ -31,4 +35,20 @@ class ScrollReporterHorizontalScrollView extends HorizontalScrollView {
             listener.onScrollUpdated(l, t);
         }
     }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                if(listener != null)
+                    listener.onScrollStart();
+                break;
+            case MotionEvent.ACTION_UP:
+                if(listener != null)
+                    listener.onScrollEnd();
+                break;
+        }
+        return super.onTouchEvent(event);
+    }
+
 }
