@@ -25,8 +25,7 @@ import com.vpetrosyan.audio.wave.WaveImageProvider;
  * Created by varan on 2/24/18.
  * NOTE!! Use large heap for application.
  */
-public class VWaveView extends FrameLayout implements
-        ScrollReporterHorizontalScrollView.ScrollUpdateListener {
+public class VWaveView extends FrameLayout {
     private static final String TAG = VWaveView.class.getSimpleName();
     private static final int COLOR_BACKGROUND = Color.BLACK;
 
@@ -125,20 +124,27 @@ public class VWaveView extends FrameLayout implements
 
         waveScrollView.setBackgroundColor(Color.BLACK);
 
-        waveScrollView.setOnTouchListener(new OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                if(motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                    listener.onSeekStarted();
-                    isUserIntercepted = true;
-                }
-                return false;
-            }
-        });
+//        waveScrollView.setOnTouchListener(new OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View view, MotionEvent motionEvent) {
+//                if(motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+//
+//                }
+//                return false;
+//            }
+//        });
 
         waveScrollView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+
+                if(newState == RecyclerView.SCROLL_STATE_DRAGGING) {
+                    if(!isUserIntercepted) {
+                        listener.onSeekStarted();
+                        isUserIntercepted = true;
+                    }
+                }
+
                 if(isUserIntercepted) {
                     if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                         isUserIntercepted = false;
@@ -174,25 +180,9 @@ public class VWaveView extends FrameLayout implements
 
         addView(waveScrollView);
 
-
-//        imageView = new ImageView(getContext());
-//
-//        scrollView = new ScrollReporterHorizontalScrollView(getContext());
-//        scrollView.setListener(this);
-        sliderView = new View(getContext());
-//
-//        scrollView.setFillViewport(true);
-//        scrollView.setSmoothScrollingEnabled(true);
-//        scrollView.setBackgroundColor(COLOR_BACKGROUND);
-//
-//        FrameLayout.LayoutParams scrollViewParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
-//                ViewGroup.LayoutParams.WRAP_CONTENT);
-//        addView(scrollView, scrollViewParams);
-//
-//        scrollView.addView(imageView);
-//
-//        // TODO(Vardan) Change to match specs.
+        // TODO(Vardan) Change to match specs.
         sliderLineWidth = SizeUtils.convertDpToPixels(5, getContext());
+        sliderView = new View(getContext());
         sliderView.setBackgroundColor(Color.RED);
 
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(sliderLineWidth, -1);
@@ -239,35 +229,6 @@ public class VWaveView extends FrameLayout implements
                 Log.e(TAG, "Drawing took " + (System.currentTimeMillis() - start));
             }
 
-        }
-    }
-
-    @Override
-    public void onScrollUpdated(int x, int y) {
-        if (hasAudio) {
-            if (x > waveImageWidth) {
-                x = waveImageWidth;
-            }
-
-            if (x < 0) {
-                x = 0;
-            }
-
-            currentSeekTime = (long) ((x / (float) provider.getCalculatedStepLength()) * provider.getCalculatedStepTime());
-        }
-    }
-
-    @Override
-    public void onScrollStart() {
-        if (listener != null) {
-            listener.onSeekStarted();
-        }
-    }
-
-    @Override
-    public void onScrollEnd() {
-        if (listener != null) {
-            listener.onSeek(currentSeekTime);
         }
     }
 
