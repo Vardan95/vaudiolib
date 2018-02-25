@@ -13,6 +13,7 @@ import com.vpetrosyan.audio.file.AudioDataExtractor;
 import com.vpetrosyan.audio.file.WAVAudioDataExtractor;
 import com.vpetrosyan.audio.formatter.AudioTimeFormatter;
 import com.vpetrosyan.audio.formatter.LongTimeFormatter;
+import com.vpetrosyan.audio.formatter.ShortTimeFormatter;
 import com.vpetrosyan.audio.vwaveview.VWaveView;
 
 public class MainActivity extends AppCompatActivity {
@@ -30,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
 
     private CheckBox checkBox;
 
+    private boolean wasPlaying = false;
+
     private Runnable waveUpdater = new Runnable() {
         @Override
         public void run() {
@@ -37,9 +40,8 @@ public class MainActivity extends AppCompatActivity {
                 int time = mediaPlayer.getCurrentPosition();
                 waveView.seekTo(time);
                 timeTextView.setText(formatter.formatTime(time));
-
+                mHandler.postDelayed(this, 24);
             }
-            mHandler.postDelayed(this, 24);
         }
     };
 
@@ -58,15 +60,19 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSeek(long time) {
                 mediaPlayer.seekTo((int) time);
-
-                if(checkBox.isChecked()) {
-                    startAudio();
-                }
+                timeTextView.setText(formatter.formatTime(time));
             }
 
             @Override
             public void onSeekStarted() {
                 pauseAudio();
+            }
+
+            @Override
+            public void onSeekCompleted() {
+                if(wasPlaying && checkBox.isChecked()) {
+                    startAudio();
+                }
             }
         });
 
@@ -105,8 +111,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
-        runOnUiThread(waveUpdater);
     }
 
     @Override
@@ -119,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
         mPlayBtn.setImageResource(android.R.drawable.ic_media_play);
 
         if(mediaPlayer != null) {
+            wasPlaying = mediaPlayer.isPlaying();
             mediaPlayer.pause();
         }
     }
@@ -128,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
 
         if(mediaPlayer != null) {
             mediaPlayer.start();
+            runOnUiThread(waveUpdater);
         }
     }
 }

@@ -3,9 +3,12 @@ package com.vpetrosyan.audio.vwaveview;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -44,11 +47,13 @@ public class VWaveView extends FrameLayout implements
         void onSeekStarted();
 
         void onSeek(long time);
+
+        void onSeekCompleted();
     }
 
     private WaveImageProvider provider;
-    private ImageView imageView;
-    private ScrollReporterHorizontalScrollView scrollView;
+    //    private ImageView imageView;
+//    private ScrollReporterHorizontalScrollView scrollView;
     private View sliderView;
     private Bitmap bitmap;
 
@@ -63,9 +68,14 @@ public class VWaveView extends FrameLayout implements
 
     private SeekListener listener;
 
-    private boolean isUserIntercepted = true;
+    private long currentSeekTime = 0;
+    private int currentScrollPosition = 0;
 
-    private long mCurrentSeekTime;
+    private RecyclerView waveScrollView;
+    private WaveImageViewAdapter waveImageAdapter;
+    private LinearLayoutManager layoutManager;
+
+    private boolean isUserIntercepted;
 
     public VWaveView(Context context) {
         super(context);
@@ -82,37 +92,106 @@ public class VWaveView extends FrameLayout implements
         init();
     }
 
+    public int getPosition(long time) {
+        return (int) ((time / (float) provider.getCalculatedStepTime()) * provider.getCalculatedStepLength());
+    }
+
     public void seekTo(int timeInMillis) {
         if (hasAudio) {
-            int x = (int) ((timeInMillis / (float) provider.getCalculatedStepTime()) * provider.getCalculatedStepLength());
             isUserIntercepted = false;
-            scrollView.smoothScrollTo(x, 0);
-            isUserIntercepted = true;
+            int currentX = getPosition(currentSeekTime);
+            int desX = getPosition(timeInMillis);
+            int diff = desX - currentX;
+            if(diff != 0) {
+                waveScrollView.smoothScrollBy(diff, 0);
+            }
         }
     }
+
 
     public void setListener(SeekListener listener) {
         this.listener = listener;
     }
 
     private void init() {
-        imageView = new ImageView(getContext());
 
-        scrollView = new ScrollReporterHorizontalScrollView(getContext());
-        scrollView.setListener(this);
+        waveScrollView = new RecyclerView(getContext());
+        waveImageAdapter = new WaveImageViewAdapter();
+
+        layoutManager = new LinearLayoutManager(getContext(),
+                LinearLayoutManager.HORIZONTAL, false);
+
+        waveScrollView.setLayoutManager(layoutManager);
+
+        waveScrollView.setBackgroundColor(Color.BLACK);
+
+        waveScrollView.setOnTouchListener(new OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                if(motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                    listener.onSeekStarted();
+                    isUserIntercepted = true;
+                }
+                return false;
+            }
+        });
+
+        waveScrollView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                if(isUserIntercepted) {
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                        isUserIntercepted = false;
+                        if (listener != null) {
+                            listener.onSeekCompleted();
+                        }
+                    }
+                }
+            }
+
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                currentScrollPosition += dx;
+
+                if (currentScrollPosition > waveImageWidth) {
+                    currentScrollPosition = waveImageWidth;
+                }
+
+                if (currentScrollPosition < 0) {
+                    currentScrollPosition = 0;
+                }
+
+                currentSeekTime = (long) ((currentScrollPosition / (float) provider.getCalculatedStepLength()) * provider.getCalculatedStepTime());
+
+                if(isUserIntercepted) {
+                    listener.onSeek(currentSeekTime);
+                }
+            }
+        });
+
+        waveScrollView.setAdapter(waveImageAdapter);
+
+        addView(waveScrollView);
+
+
+//        imageView = new ImageView(getContext());
+//
+//        scrollView = new ScrollReporterHorizontalScrollView(getContext());
+//        scrollView.setListener(this);
         sliderView = new View(getContext());
-
-        scrollView.setFillViewport(true);
-        scrollView.setSmoothScrollingEnabled(true);
-        scrollView.setBackgroundColor(COLOR_BACKGROUND);
-
-        FrameLayout.LayoutParams scrollViewParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
-        addView(scrollView, scrollViewParams);
-
-        scrollView.addView(imageView);
-
-        // TODO(Vardan) Change to match specs.
+//
+//        scrollView.setFillViewport(true);
+//        scrollView.setSmoothScrollingEnabled(true);
+//        scrollView.setBackgroundColor(COLOR_BACKGROUND);
+//
+//        FrameLayout.LayoutParams scrollViewParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+//                ViewGroup.LayoutParams.WRAP_CONTENT);
+//        addView(scrollView, scrollViewParams);
+//
+//        scrollView.addView(imageView);
+//
+//        // TODO(Vardan) Change to match specs.
         sliderLineWidth = SizeUtils.convertDpToPixels(5, getContext());
         sliderView.setBackgroundColor(Color.RED);
 
@@ -122,8 +201,6 @@ public class VWaveView extends FrameLayout implements
 
         stepDesiredLength = SizeUtils.convertDpToPixels(DEFAULT_STEP_SIZE, getContext());
         stepDesiredTimeInMs = DEFAULT_STEP_TIME_LENGTH;
-
-        setWillNotDraw(false);
     }
 
     public void setAudio(AudioData data) {
@@ -137,7 +214,7 @@ public class VWaveView extends FrameLayout implements
         provider = createNativeProvider(data);
 
         bitmap = provider.provideWaveBitmap();
-        imageView.setImageBitmap(bitmap);
+        waveImageAdapter.setImage(bitmap);
     }
 
     @Override
@@ -156,7 +233,7 @@ public class VWaveView extends FrameLayout implements
             waveImageWidth = bitmap.getWidth();
             updateSliderHeight(bitmap.getHeight());
 
-            imageView.setImageBitmap(bitmap);
+            waveImageAdapter.setImage(bitmap);
 
             if (BuildConfig.DEBUG) {
                 Log.e(TAG, "Drawing took " + (System.currentTimeMillis() - start));
@@ -176,7 +253,7 @@ public class VWaveView extends FrameLayout implements
                 x = 0;
             }
 
-            mCurrentSeekTime = (long) ((x / (float) provider.getCalculatedStepLength()) * provider.getCalculatedStepTime());
+            currentSeekTime = (long) ((x / (float) provider.getCalculatedStepLength()) * provider.getCalculatedStepTime());
         }
     }
 
@@ -190,7 +267,7 @@ public class VWaveView extends FrameLayout implements
     @Override
     public void onScrollEnd() {
         if (listener != null) {
-            listener.onSeek(mCurrentSeekTime);
+            listener.onSeek(currentSeekTime);
         }
     }
 

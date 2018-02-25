@@ -19,6 +19,6 @@ public class LongTimeFormatter implements AudioTimeFormatter {
         int seconds = (int) ((timeInMillis / 1000d) % 60);
         int minutes = (int) ((timeInMillis / (1000 * 60)) % 60);
 
-        return String.format(Locale.US, "%02d:%02d:%02d", minutes, seconds, millis);
+        return String.format(Locale.US, "%02d:%02d:%03d", minutes, seconds, millis);
     }
 }
