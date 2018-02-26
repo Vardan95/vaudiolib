@@ -8,11 +8,8 @@ import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.MotionEvent;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 
 import com.vpetrosyan.audio.file.AudioData;
 import com.vpetrosyan.audio.formatter.AudioTimeFormatter;
@@ -53,7 +50,7 @@ public class VWaveView extends FrameLayout {
     private WaveImageProvider provider;
     //    private ImageView imageView;
 //    private ScrollReporterHorizontalScrollView scrollView;
-    private View sliderView;
+    private SliderView sliderView;
     private Bitmap bitmap;
 
     private boolean hasAudio = false;
@@ -64,6 +61,7 @@ public class VWaveView extends FrameLayout {
     private int stepDesiredTimeInMs;
 
     private int waveImageWidth;
+    private int waveImageHeight;
 
     private SeekListener listener;
 
@@ -72,7 +70,6 @@ public class VWaveView extends FrameLayout {
 
     private RecyclerView waveScrollView;
     private WaveImageViewAdapter waveImageAdapter;
-    private LinearLayoutManager layoutManager;
 
     private boolean isUserIntercepted;
 
@@ -113,26 +110,15 @@ public class VWaveView extends FrameLayout {
     }
 
     private void init() {
-
         waveScrollView = new RecyclerView(getContext());
         waveImageAdapter = new WaveImageViewAdapter();
 
-        layoutManager = new LinearLayoutManager(getContext(),
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(),
                 LinearLayoutManager.HORIZONTAL, false);
 
         waveScrollView.setLayoutManager(layoutManager);
 
         waveScrollView.setBackgroundColor(Color.BLACK);
-
-//        waveScrollView.setOnTouchListener(new OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View view, MotionEvent motionEvent) {
-//                if(motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-//
-//                }
-//                return false;
-//            }
-//        });
 
         waveScrollView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -182,10 +168,10 @@ public class VWaveView extends FrameLayout {
 
         // TODO(Vardan) Change to match specs.
         sliderLineWidth = SizeUtils.convertDpToPixels(5, getContext());
-        sliderView = new View(getContext());
-        sliderView.setBackgroundColor(Color.RED);
+        sliderView = new SliderView(getContext());
 
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(sliderLineWidth, -1);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params.gravity = Gravity.CENTER_HORIZONTAL;
         addView(sliderView, params);
 
@@ -221,7 +207,9 @@ public class VWaveView extends FrameLayout {
             bitmap = provider.provideWaveBitmap();
 
             waveImageWidth = bitmap.getWidth();
-            updateSliderHeight(bitmap.getHeight());
+            waveImageHeight = bitmap.getHeight();
+
+            sliderView.updateSlider(waveImageHeight, (int) provider.getCalculatedVerticalPadding());
 
             waveImageAdapter.setImage(bitmap);
 
@@ -230,12 +218,6 @@ public class VWaveView extends FrameLayout {
             }
 
         }
-    }
-
-    private void updateSliderHeight(int height) {
-        LayoutParams params = (LayoutParams) sliderView.getLayoutParams();
-        params.height = height;
-        sliderView.setLayoutParams(params);
     }
 
     private WaveImageProvider createNativeProvider(AudioData data) {

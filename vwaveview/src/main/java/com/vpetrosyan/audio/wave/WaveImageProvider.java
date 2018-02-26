@@ -11,5 +11,9 @@ public interface WaveImageProvider {
     // TODO(Vardan) implement config mechanism
     int getCalculatedStepLength();
     int getCalculatedStepTime();
+
+    // Returns calculated padding between top and first line
+    float getCalculatedVerticalPadding();
+
     void setSidePadding(int padding);
 }

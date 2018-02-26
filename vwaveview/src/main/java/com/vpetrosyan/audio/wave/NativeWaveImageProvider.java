@@ -147,6 +147,11 @@ public class NativeWaveImageProvider implements WaveImageProvider {
     }
 
     @Override
+    public float getCalculatedVerticalPadding() {
+        return startYForTopLine;
+    }
+
+    @Override
     public Bitmap provideWaveBitmap() {
         calculate();
         if (BuildConfig.DEBUG) {
