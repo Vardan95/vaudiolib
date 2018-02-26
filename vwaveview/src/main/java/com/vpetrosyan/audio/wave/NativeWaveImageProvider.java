@@ -218,8 +218,10 @@ public class NativeWaveImageProvider implements WaveImageProvider {
         // Draw texts
         canvas.save();
         canvas.translate(paddingSide, 0);
-        for (float i = 0; i < waveWidth; i += stepLength) {
-            float sectionStart = i;
+
+        float waveMajorMarkerX;
+        for (waveMajorMarkerX = 0; waveMajorMarkerX < waveWidth; waveMajorMarkerX += stepLength) {
+            float sectionStart = waveMajorMarkerX;
 
             // Draw major line
             canvas.drawRect(sectionStart - lineWidth, startYForTopLine,
@@ -238,6 +240,11 @@ public class NativeWaveImageProvider implements WaveImageProvider {
 
             milliSeconds += stepInMillis;
         }
+
+        // Draw last major line
+        canvas.drawRect(waveMajorMarkerX - lineWidth, startYForTopLine,
+                waveMajorMarkerX + lineWidth, majorBarTopY, fillPaint);
+
         canvas.restore();
 
         // Draw bars left from waves.
@@ -258,7 +265,7 @@ public class NativeWaveImageProvider implements WaveImageProvider {
         }
 
         // Draw bars right from waves.
-        for (float i = waveWidth + paddingSide; i <= finalWidth; i += stepLength) {
+        for (float i = waveMajorMarkerX + paddingSide; i <= finalWidth; i += stepLength) {
             float sectionStart = i;
 
             // Draw major line
