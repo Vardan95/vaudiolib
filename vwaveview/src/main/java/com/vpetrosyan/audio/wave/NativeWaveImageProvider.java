@@ -10,7 +10,6 @@ import android.util.Log;
 
 import com.vpetrosyan.audio.file.AudioData;
 import com.vpetrosyan.audio.formatter.AudioTimeFormatter;
-import com.vpetrosyan.audio.utils.AudioUtils;
 import com.vpetrosyan.audio.vwaveview.BuildConfig;
 
 /**
@@ -190,6 +189,12 @@ public class NativeWaveImageProvider implements WaveImageProvider {
             msInPx = stepLength / (float) stepInMillis;
         }
 
+        if(!checkPossibleImageSize(msInPx)) {
+            stepInMillis = (int) (stepInMillis * 1.5);
+            calculate();
+            return;
+        }
+
         if (msInPx > 0.8f) {
             throw new RuntimeException("Font size and marker spacing are incompatible!!!");
         }
@@ -203,6 +208,30 @@ public class NativeWaveImageProvider implements WaveImageProvider {
         waveWidth = (int) (audioData.audioLength * msInPx);
         finalWidth = waveWidth + 2 * paddingSide;
         finalHeight = (int) (startYForBottomLine + startYForTopLine);
+    }
+
+    // TODO (Vardan) Implement with behavior
+    private boolean checkPossibleImageSize(float msInPx) {
+        int imageWidth = (int) (audioData.audioLength * msInPx);
+        int heightValue = 500; // usually height will be less thax 500px.
+        int bmpChannels = 2; // RGB_565 2 bytes
+        int threshold = 2000; //px When drawing around max possible value Android shows unexpected
+        // behavior using safe threshold.
+        long maxMB = 16;
+
+        Canvas canvas = new Canvas();
+        int maxSupportedWidth = canvas.getMaximumBitmapWidth();
+
+        if(getMBFromByte(imageWidth * heightValue * bmpChannels) > maxMB ||
+                maxSupportedWidth - imageWidth <= threshold) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private long getMBFromByte(long bytes){
+        return (bytes / 1024) / 1024;
     }
 
     private void drawAxis(Canvas canvas) {

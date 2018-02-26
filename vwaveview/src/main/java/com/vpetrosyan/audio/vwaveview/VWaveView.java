@@ -28,7 +28,7 @@ public class VWaveView extends FrameLayout {
 
     // All values are in dp, sp and milliseconds.
     private static final int DEFAULT_STEP_SIZE = 10;
-    private static final int DEFAULT_STEP_TIME_LENGTH = 10000;
+    private static final int DEFAULT_STEP_TIME_LENGTH = 1000;
     private static final int DEFAULT_FONT_SIZE = 12; //sp
     private static final int DEFAULT_WAVE_HEIGHT = 130; //dp
     private static final int DEFAULT_TEXT_PADDING = 5; //dp
@@ -48,8 +48,6 @@ public class VWaveView extends FrameLayout {
     }
 
     private WaveImageProvider provider;
-    //    private ImageView imageView;
-//    private ScrollReporterHorizontalScrollView scrollView;
     private SliderView sliderView;
     private Bitmap bitmap;
 

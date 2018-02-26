@@ -13,7 +13,6 @@ import com.vpetrosyan.audio.file.AudioDataExtractor;
 import com.vpetrosyan.audio.file.WAVAudioDataExtractor;
 import com.vpetrosyan.audio.formatter.AudioTimeFormatter;
 import com.vpetrosyan.audio.formatter.LongTimeFormatter;
-import com.vpetrosyan.audio.formatter.ShortTimeFormatter;
 import com.vpetrosyan.audio.vwaveview.VWaveView;
 
 public class MainActivity extends AppCompatActivity {
@@ -82,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if (mediaPlayer == null) {
                     AudioDataExtractor extractor = new WAVAudioDataExtractor();
+//                    AudioDataExtractor extractor = new PCMAudioExtractor();
                     waveView.setAudio(extractor.extractData(MainActivity.this, R.raw.test3));
                     timeTextView.setText(formatter.formatTime(0));
 

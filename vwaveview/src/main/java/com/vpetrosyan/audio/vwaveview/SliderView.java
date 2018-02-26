@@ -82,12 +82,5 @@ public class SliderView extends View {
         if(sliderImage != null) {
             canvas.drawBitmap(sliderImage, 0, 0, null);
         }
-//        float posX = getMeasuredWidth() / 2f;
-//        float halfHeight = sliderLineWidth / 2f;
-//        canvas.drawRect(posX - halfHeight , 0,
-//                posX + halfHeight, getMeasuredHeight(), sliderLinePaint);
-//
-//        canvas.drawCircle(posX, 0, sliderCircleRadius, sliderCirclePaint);
-//        canvas.drawCircle(posX, getMeasuredHeight(), sliderCircleRadius, sliderCirclePaint);
     }
 }
