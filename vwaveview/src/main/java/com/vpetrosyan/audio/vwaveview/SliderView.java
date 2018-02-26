@@ -16,10 +16,10 @@ import com.vpetrosyan.audio.utils.SizeUtils;
 
 public class SliderView extends View {
 
-    private static final int DEFAULT_LINE_WIDTH = 4; //dp
-    private static final int DEFAULT_CIRCLE_RADIUS = 8; //dp
-    private static final int DEFAULT_LINE_COLOR = Color.parseColor("#ea6927");
-    private static final int DEFAULT_CIRCLE_COLOR = Color.parseColor("#194fe7");
+    private static final int DEFAULT_LINE_WIDTH = 1; //dp
+    private static final int DEFAULT_CIRCLE_RADIUS = 3; //dp
+    private static final int DEFAULT_LINE_COLOR = Color.parseColor("#194fe7");
+    private static final int DEFAULT_CIRCLE_COLOR = Color.parseColor("#ea6927");
 
     private int sliderLineWidth;
     private int sliderCircleRadius;

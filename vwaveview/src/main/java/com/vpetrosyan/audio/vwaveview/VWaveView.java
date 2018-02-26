@@ -53,8 +53,6 @@ public class VWaveView extends FrameLayout {
 
     private boolean hasAudio = false;
 
-    private int sliderLineWidth;
-
     private int stepDesiredLength;
     private int stepDesiredTimeInMs;
 
@@ -165,7 +163,6 @@ public class VWaveView extends FrameLayout {
         addView(waveScrollView);
 
         // TODO(Vardan) Change to match specs.
-        sliderLineWidth = SizeUtils.convertDpToPixels(5, getContext());
         sliderView = new SliderView(getContext());
 
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(

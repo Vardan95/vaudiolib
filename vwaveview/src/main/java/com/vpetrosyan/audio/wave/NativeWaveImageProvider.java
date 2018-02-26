@@ -18,6 +18,7 @@ import com.vpetrosyan.audio.vwaveview.BuildConfig;
 
 public class NativeWaveImageProvider implements WaveImageProvider {
     private static final String TAG = NativeWaveImageProvider.class.getSimpleName();
+    private static final int LOW_MEMORY_INTERVAL_SCALE_VALUE = 5;
 
     private AudioTimeFormatter formatter;
 
@@ -34,6 +35,7 @@ public class NativeWaveImageProvider implements WaveImageProvider {
     private int paddingSide; // Padding for wave
 
     private int stepInMillis; // In milliseconds
+    private int stepInMillisInitialValue; // In milliseconds
     private int stepLength;
 
     private float centerTextY;
@@ -107,7 +109,8 @@ public class NativeWaveImageProvider implements WaveImageProvider {
     }
 
     public void setStepDesiredTimeInMillis(int time) {
-        stepInMillis = time;
+        stepInMillisInitialValue = time;
+        stepInMillis = stepInMillisInitialValue;
     }
 
     public void setDesiredStepLength(int length) {
@@ -190,7 +193,7 @@ public class NativeWaveImageProvider implements WaveImageProvider {
         }
 
         if(!checkPossibleImageSize(msInPx)) {
-            stepInMillis = (int) (stepInMillis * 1.5);
+            stepInMillis = stepInMillis * LOW_MEMORY_INTERVAL_SCALE_VALUE;
             calculate();
             return;
         }
