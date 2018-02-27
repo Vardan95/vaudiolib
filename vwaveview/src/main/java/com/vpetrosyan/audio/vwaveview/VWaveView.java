@@ -91,7 +91,8 @@ public class VWaveView extends FrameLayout {
     public void seekTo(int timeInMillis) {
         if (hasAudio) {
             isUserIntercepted = false;
-            int currentX = getPosition(currentSeekTime);
+            int currentX = waveScrollView.computeHorizontalScrollOffset();
+//            int currentX = waveScrollView.computeHorizontalScrollOffset();
             int desX = getPosition(timeInMillis);
             int diff = desX - currentX;
             if(diff != 0) {
